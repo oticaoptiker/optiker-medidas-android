@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity() {
         val opts = FaceDetectorOptions.Builder()
             .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
             .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
-            .setMinFaceSize(0.22f)
+            .setMinFaceSize(0.16f)
             .enableTracking()
             .build()
         FaceDetection.getClient(opts)
@@ -350,20 +350,26 @@ class MainActivity : AppCompatActivity() {
             abs(midEye.x - w / 2f) <= w * 0.14f &&
                 midEye.y in (h * 0.31f)..(h * 0.59f)
 
+        // A posição do rosto continua sendo uma trava de precisão.
+        // Roll = inclinação lateral; yaw = rosto virado para os lados;
+        // pitch = queixo para cima/baixo.
         val poseOk =
-            abs(geometry.roll) <= 5.0f &&
-                abs(geometry.yaw) <= 10f &&
-                abs(geometry.pitch) <= 10f
+            abs(geometry.roll) <= 3.0f &&
+                abs(geometry.yaw) <= 6.0f &&
+                abs(geometry.pitch) <= 6.0f
 
-        val distanceOk = faceRatio in 0.27f..0.66f
+        // A distância não é mais uma trava rígida.
+        // O cartão é a referência física de escala; portanto o que realmente
+        // importa aqui é o rosto estar detectado, centralizado e com pose válida.
+        val distanceOk = true
 
         val distanceHint = when {
-            faceRatio < 0.27f -> "Aproxime um pouco o rosto"
-            faceRatio > 0.66f -> "Afaste um pouco o celular"
-            else -> "Distância correta"
+            faceRatio < 0.16f -> "Se quiser, aproxime um pouco para facilitar a leitura."
+            faceRatio > 0.82f -> "Se quiser, afaste um pouco para caber o cartão ao lado."
+            else -> "Distância acompanhada automaticamente"
         }
 
-        val faceReady = centerOk && poseOk && distanceOk
+        val faceReady = centerOk && poseOk
 
         // FASE 1 — primeiro deixamos o rosto pronto, sem exigir cartão.
         if (capturePhase == CapturePhase.FACE) {
@@ -373,7 +379,7 @@ class MainActivity : AppCompatActivity() {
                 max(0, faceStableFrames - 2)
             }
 
-            if (faceStableFrames >= 5) {
+            if (faceStableFrames >= 7) {
                 capturePhase = CapturePhase.CARD
                 stableFrames = 0
                 lostFaceFrames = 0
@@ -502,18 +508,18 @@ class MainActivity : AppCompatActivity() {
         setStatus(
             poseStatus,
             "Cabeça",
-            if (poseOk) "Boa" else "Ajuste",
+            if (poseOk) "Reta ✓" else "Endireite",
             poseOk
         )
         setStatus(
             distanceStatus,
             "Distância",
-            if (distanceOk) "Boa" else "Ajuste",
-            distanceOk
+            "Automática",
+            true
         )
 
         val progress = if (capturePhase == CapturePhase.FACE) {
-            (faceStableFrames / 5f * 100).toInt()
+            (faceStableFrames / 7f * 100).toInt()
         } else {
             (stableFrames / 8f * 100).toInt()
         }.coerceIn(0, 100)
@@ -537,17 +543,14 @@ class MainActivity : AppCompatActivity() {
             capturePhase == CapturePhase.FACE && !centerOk ->
                 "Centralize o rosto. Não precisa mostrar o cartão ainda."
 
-            capturePhase == CapturePhase.FACE && !distanceOk ->
-                distanceHint
-
             capturePhase == CapturePhase.FACE && !poseOk ->
-                "Olhe para frente e mantenha a cabeça naturalmente reta."
+                "Olhe diretamente para a câmera. Não incline, não vire o rosto e mantenha o queixo reto."
 
             capturePhase == CapturePhase.FACE ->
                 "Rosto correto ✓ Fique assim por um instante."
 
-            !centerOk || !distanceOk || !poseOk ->
-                "Mantenha o rosto como estava. Se necessário, retire o cartão e reposicione."
+            !centerOk || !poseOk ->
+                "Rosto fora da posição ideal. Centralize e olhe diretamente para a câmera antes de continuar."
 
             !card.valid ->
                 "Rosto OK ✓ Agora encoste o cartão ao lado da têmpora/bochecha. Pode ser horizontal ou vertical."
@@ -742,7 +745,7 @@ class MainActivity : AppCompatActivity() {
             "Altura multifocal • captura ${heightCaptures.size + 1} de 2"
         }
 
-        instructionText.text = "Centralize o rosto primeiro. O cartão será pedido depois."
+        instructionText.text = "Centralize o rosto e olhe reto para a câmera. A distância é ajustada automaticamente."
         captureButton.isEnabled = false
         stabilityText.text = "Estabilidade: 0%"
         liveOverlay.phase = CapturePhase.FACE
@@ -888,7 +891,7 @@ class MainActivity : AppCompatActivity() {
         summaryScreen.visibility = View.GONE
 
         stepText.text = "DNP • captura 1 de 3"
-        instructionText.text = "Centralize o rosto primeiro. O cartão será pedido depois."
+        instructionText.text = "Centralize o rosto e olhe reto para a câmera. A distância é ajustada automaticamente."
     }
 
     private fun median(values: List<Double>): Double {
