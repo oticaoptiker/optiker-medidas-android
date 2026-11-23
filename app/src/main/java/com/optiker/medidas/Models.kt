@@ -6,6 +6,8 @@ import android.graphics.RectF
 
 enum class WorkflowMode { DNP, HEIGHT }
 
+enum class CapturePhase { FACE, CARD }
+
 enum class HandleType {
     OD, OE, CENTER,
     CARD_1, CARD_2, CARD_3, CARD_4,

@@ -7,13 +7,13 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
-import kotlin.math.min
 
 class MeasurementOverlayView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : View(context, attrs) {
 
+    var phase: CapturePhase = CapturePhase.FACE
     var cardValid: Boolean = false
     var faceValid: Boolean = false
     var poseValid: Boolean = false
@@ -25,9 +25,10 @@ class MeasurementOverlayView @JvmOverloads constructor(
     }
 
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        textSize = 34f
+        textSize = 28f
         style = Paint.Style.FILL
         typeface = android.graphics.Typeface.DEFAULT_BOLD
+        textAlign = Paint.Align.CENTER
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -35,36 +36,43 @@ class MeasurementOverlayView @JvmOverloads constructor(
         val w = width.toFloat()
         val h = height.toFloat()
 
-        val cardW = min(w * 0.58f, 420f)
-        val cardH = cardW * (53.98f / 85.60f)
-        val cardRect = RectF(
-            (w - cardW) / 2f,
-            h * 0.055f,
-            (w + cardW) / 2f,
-            h * 0.055f + cardH
+        val faceRect = RectF(
+            w * 0.17f,
+            h * 0.20f,
+            w * 0.83f,
+            h * 0.88f
         )
 
         paint.color = ContextCompat.getColor(
             context,
-            if (cardValid) R.color.optiker_green else R.color.warn
+            if (faceValid && poseValid && distanceValid) R.color.optiker_green
+            else R.color.optiker_lavender
         )
         paint.pathEffect = android.graphics.DashPathEffect(floatArrayOf(18f, 12f), 0f)
-        canvas.drawRoundRect(cardRect, 18f, 18f, paint)
-
-        val faceRect = RectF(
-            w * 0.18f,
-            h * 0.28f,
-            w * 0.82f,
-            h * 0.92f
-        )
-        paint.color = ContextCompat.getColor(
-            context,
-            if (faceValid && poseValid && distanceValid) R.color.optiker_green else R.color.optiker_lavender
-        )
         canvas.drawOval(faceRect, paint)
         paint.pathEffect = null
 
         textPaint.color = ContextCompat.getColor(context, R.color.white)
-        canvas.drawText("CARTÃO", cardRect.left + 10f, cardRect.top - 12f, textPaint)
+
+        if (phase == CapturePhase.FACE) {
+            canvas.drawText("CENTRALIZE O ROSTO", w / 2f, h * 0.14f, textPaint)
+        } else {
+            textPaint.color = ContextCompat.getColor(
+                context,
+                if (cardValid) R.color.optiker_green else R.color.white
+            )
+            canvas.drawText(
+                if (cardValid) "CARTÃO DETECTADO ✓" else "CARTÃO AO LADO DO ROSTO",
+                w / 2f,
+                h * 0.13f,
+                textPaint
+            )
+
+            // Apenas setas/zonas amplas: não obriga uma posição exata.
+            textPaint.textSize = 24f
+            canvas.drawText("←", w * 0.08f, h * 0.48f, textPaint)
+            canvas.drawText("→", w * 0.92f, h * 0.48f, textPaint)
+            textPaint.textSize = 28f
+        }
     }
 }

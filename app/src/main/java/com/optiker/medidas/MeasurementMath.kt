@@ -4,6 +4,7 @@ import android.graphics.PointF
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.round
 
 object MeasurementMath {
@@ -11,31 +12,13 @@ object MeasurementMath {
     private const val CARD_H_MM = 53.98
     private const val CARD_RATIO = CARD_W_MM / CARD_H_MM
 
+    private data class CardScale(
+        val scale: Double,
+        val quality: Int
+    )
+
     fun dnp(frame: FrameMeasurement): DnpResult? {
-        if (frame.cardCorners.size != 4) return null
-
-        val c = frame.cardCorners
-        val top = distance(c[0], c[1])
-        val right = distance(c[1], c[2])
-        val bottom = distance(c[3], c[2])
-        val left = distance(c[0], c[3])
-
-        val cardW = (top + bottom) / 2.0
-        val cardH = (left + right) / 2.0
-        if (cardW < 20.0 || cardH < 12.0) return null
-
-        val ratioErr = abs(cardW / cardH - CARD_RATIO) / CARD_RATIO
-        val parallelErr = max(
-            abs(top - bottom) / cardW,
-            abs(left - right) / cardH
-        )
-        val quality = (
-            100.0 -
-                minOf(55.0, ratioErr * 280.0) -
-                minOf(35.0, parallelErr * 180.0)
-            ).roundToIntSafe().coerceIn(0, 100)
-
-        val scaleX = CARD_W_MM / cardW
+        val card = cardScale(frame.cardCorners) ?: return null
 
         val dx = frame.oe.x - frame.od.x
         val dy = frame.oe.y - frame.od.y
@@ -45,17 +28,17 @@ object MeasurementMath {
         val ux = dx / pdPx
         val uy = dy / pdPx
 
-        val pd = pdPx * scaleX
+        val pd = pdPx * card.scale
 
         var dOD = abs(
             (frame.od.x - frame.center.x) * ux +
                 (frame.od.y - frame.center.y) * uy
-        ) * scaleX
+        ) * card.scale
 
         var dOE = abs(
             (frame.oe.x - frame.center.x) * ux +
                 (frame.oe.y - frame.center.y) * uy
-        ) * scaleX
+        ) * card.scale
 
         val sum = dOD + dOE
         if (sum > 0) {
@@ -68,22 +51,14 @@ object MeasurementMath {
             od = half(dOD),
             oe = half(dOE),
             pd = half(pd),
-            cardQuality = quality
+            cardQuality = card.quality
         )
     }
 
     fun height(frame: FrameMeasurement): HeightResult? {
-        val base = dnp(frame) ?: return null
+        val card = cardScale(frame.cardCorners) ?: return null
         val bOD = frame.bottomOD ?: return null
         val bOE = frame.bottomOE ?: return null
-        if (frame.cardCorners.size != 4) return null
-
-        val c = frame.cardCorners
-        val right = distance(c[1], c[2])
-        val left = distance(c[0], c[3])
-        val cardH = (left + right) / 2.0
-        if (cardH < 12.0) return null
-        val scaleY = CARD_H_MM / cardH
 
         val dx = frame.oe.x - frame.od.x
         val dy = frame.oe.y - frame.od.y
@@ -100,21 +75,61 @@ object MeasurementMath {
         val hOD = abs(
             (bOD.x - frame.od.x) * downX +
                 (bOD.y - frame.od.y) * downY
-        ) * scaleY
+        ) * card.scale
 
         val hOE = abs(
             (bOE.x - frame.oe.x) * downX +
                 (bOE.y - frame.oe.y) * downY
-        ) * scaleY
+        ) * card.scale
 
-        // Reference base is intentionally evaluated so card/geometry validity remains shared.
-        @Suppress("UNUSED_VARIABLE")
-        val unused = base
-
-        return HeightResult(od = half(hOD), oe = half(hOE))
+        return HeightResult(
+            od = half(hOD),
+            oe = half(hOE)
+        )
     }
 
-    fun cardQuality(frame: FrameMeasurement): Int = dnp(frame)?.cardQuality ?: 0
+    fun cardQuality(frame: FrameMeasurement): Int =
+        cardScale(frame.cardCorners)?.quality ?: 0
+
+    /**
+     * O cartão pode estar horizontal ou vertical.
+     * Identificamos automaticamente o par de lados longos e curtos.
+     */
+    private fun cardScale(c: List<PointF>): CardScale? {
+        if (c.size != 4) return null
+
+        val top = distance(c[0], c[1])
+        val right = distance(c[1], c[2])
+        val bottom = distance(c[3], c[2])
+        val left = distance(c[0], c[3])
+
+        val pairA = (top + bottom) / 2.0
+        val pairB = (left + right) / 2.0
+
+        val longPx = max(pairA, pairB)
+        val shortPx = min(pairA, pairB)
+        if (longPx < 20.0 || shortPx < 12.0) return null
+
+        val ratioErr = abs(longPx / shortPx - CARD_RATIO) / CARD_RATIO
+
+        val parallelA = abs(top - bottom) / max(pairA, 1.0)
+        val parallelB = abs(left - right) / max(pairB, 1.0)
+        val parallelErr = max(parallelA, parallelB)
+
+        val quality = (
+            100.0 -
+                minOf(55.0, ratioErr * 280.0) -
+                minOf(35.0, parallelErr * 180.0)
+            ).roundToIntSafe().coerceIn(0, 100)
+
+        val scaleLong = CARD_W_MM / longPx
+        val scaleShort = CARD_H_MM / shortPx
+
+        // Média das duas escalas reduz pequenas diferenças de detecção/perspectiva.
+        val scale = (scaleLong + scaleShort) / 2.0
+
+        return CardScale(scale = scale, quality = quality)
+    }
 
     private fun distance(a: PointF, b: PointF): Double =
         hypot((a.x - b.x).toDouble(), (a.y - b.y).toDouble())

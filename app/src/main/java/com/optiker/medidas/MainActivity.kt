@@ -76,6 +76,9 @@ class MainActivity : AppCompatActivity() {
     private val analyzerBusy = AtomicBoolean(false)
     private var lastAnalysisAt = 0L
     private var stableFrames = 0
+    private var faceStableFrames = 0
+    private var lostFaceFrames = 0
+    private var capturePhase = CapturePhase.FACE
     private var autoCaptureArmed = false
     private var latestValidFrame: LiveFrameResult? = null
 
@@ -242,18 +245,26 @@ class MainActivity : AppCompatActivity() {
                     return@setAnalyzer
                 }
 
-                val card = CardDetector.detect(bitmap)
                 val input = InputImage.fromBitmap(bitmap, 0)
 
                 faceDetector.process(input)
                     .addOnSuccessListener { faces ->
-                        analyzeFrame(bitmap, card, faces)
+                        analyzeFrame(bitmap, faces)
                     }
                     .addOnFailureListener {
                         bitmap.recycle()
                         runOnUiThread {
                             stableFrames = 0
-                            updateLiveUi(null, card, false, false, false, "Rosto não detectado")
+                            faceStableFrames = 0
+                            capturePhase = CapturePhase.FACE
+                            updateLiveUi(
+                                null,
+                                CardDetector.empty(),
+                                false,
+                                false,
+                                false,
+                                "Rosto não detectado"
+                            )
                         }
                     }
                     .addOnCompleteListener {
@@ -273,12 +284,21 @@ class MainActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun analyzeFrame(bitmap: Bitmap, card: CardDetection, faces: List<Face>) {
+    private fun analyzeFrame(bitmap: Bitmap, faces: List<Face>) {
         if (faces.size != 1) {
             bitmap.recycle()
             runOnUiThread {
                 stableFrames = 0
-                updateLiveUi(null, card, false, false, false, if (faces.isEmpty()) "Centralize o rosto" else "Apenas uma pessoa na câmera")
+                faceStableFrames = 0
+                capturePhase = CapturePhase.FACE
+                updateLiveUi(
+                    null,
+                    CardDetector.empty(),
+                    false,
+                    false,
+                    false,
+                    if (faces.isEmpty()) "Centralize o rosto" else "Apenas uma pessoa na câmera"
+                )
             }
             return
         }
@@ -292,7 +312,16 @@ class MainActivity : AppCompatActivity() {
             bitmap.recycle()
             runOnUiThread {
                 stableFrames = 0
-                updateLiveUi(null, card, false, false, false, "Aproxime um pouco o rosto")
+                faceStableFrames = 0
+                capturePhase = CapturePhase.FACE
+                updateLiveUi(
+                    null,
+                    CardDetector.empty(),
+                    false,
+                    false,
+                    false,
+                    "Aproxime um pouco o rosto"
+                )
             }
             return
         }
@@ -315,35 +344,99 @@ class MainActivity : AppCompatActivity() {
         val h = bitmap.height.toFloat()
         val faceRatio = bounds.width() / w
 
+        // Mais natural que a versão anterior: ainda rejeita rotações relevantes,
+        // mas não exige uma posição "matematicamente perfeita".
         val centerOk =
-            abs(midEye.x - w / 2f) <= w * 0.11f &&
-                midEye.y in (h * 0.34f)..(h * 0.56f)
+            abs(midEye.x - w / 2f) <= w * 0.14f &&
+                midEye.y in (h * 0.31f)..(h * 0.59f)
 
         val poseOk =
-            abs(geometry.roll) <= 3.5f &&
-                abs(geometry.yaw) <= 8f &&
-                abs(geometry.pitch) <= 8f
+            abs(geometry.roll) <= 5.0f &&
+                abs(geometry.yaw) <= 10f &&
+                abs(geometry.pitch) <= 10f
 
-        val distanceOk = faceRatio in 0.30f..0.62f
+        val distanceOk = faceRatio in 0.27f..0.66f
 
         val distanceHint = when {
-            faceRatio < 0.30f -> "Aproxime o rosto"
-            faceRatio > 0.62f -> "Afaste o celular"
+            faceRatio < 0.27f -> "Aproxime um pouco o rosto"
+            faceRatio > 0.66f -> "Afaste um pouco o celular"
             else -> "Distância correta"
         }
 
-        val allValid = card.valid && centerOk && poseOk && distanceOk
+        val faceReady = centerOk && poseOk && distanceOk
+
+        // FASE 1 — primeiro deixamos o rosto pronto, sem exigir cartão.
+        if (capturePhase == CapturePhase.FACE) {
+            faceStableFrames = if (faceReady) {
+                min(10, faceStableFrames + 1)
+            } else {
+                max(0, faceStableFrames - 2)
+            }
+
+            if (faceStableFrames >= 5) {
+                capturePhase = CapturePhase.CARD
+                stableFrames = 0
+                lostFaceFrames = 0
+            }
+
+            bitmap.recycle()
+
+            runOnUiThread {
+                updateLiveUi(
+                    geometry,
+                    CardDetector.empty(),
+                    centerOk,
+                    poseOk,
+                    distanceOk,
+                    distanceHint
+                )
+            }
+            return
+        }
+
+        // FASE 2 — rosto já aprovado. Agora procuramos o cartão nas laterais.
+        if (!faceReady) {
+            lostFaceFrames++
+            stableFrames = max(0, stableFrames - 2)
+
+            if (lostFaceFrames >= 5) {
+                capturePhase = CapturePhase.FACE
+                faceStableFrames = 0
+                lostFaceFrames = 0
+            }
+
+            bitmap.recycle()
+
+            runOnUiThread {
+                updateLiveUi(
+                    geometry,
+                    CardDetector.empty(),
+                    centerOk,
+                    poseOk,
+                    distanceOk,
+                    distanceHint
+                )
+            }
+            return
+        }
+
+        lostFaceFrames = 0
+        val card = CardDetector.detect(bitmap, bounds)
+        val allValid = card.valid && faceReady
 
         if (allValid) {
-            stableFrames = min(14, stableFrames + 1)
-            if (stableFrames >= 8) {
+            stableFrames = min(12, stableFrames + 1)
+
+            if (stableFrames >= 5) {
                 latestValidFrame?.bitmap?.let { old ->
                     if (!old.isRecycled) old.recycle()
                 }
                 latestValidFrame = LiveFrameResult(
                     bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false),
                     face = geometry,
-                    card = card.copy(corners = card.corners.map { PointF(it.x, it.y) }.toMutableList()),
+                    card = card.copy(
+                        corners = card.corners.map { PointF(it.x, it.y) }.toMutableList()
+                    ),
                     faceCentered = centerOk,
                     poseValid = poseOk,
                     distanceValid = distanceOk,
@@ -352,14 +445,22 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         } else {
-            stableFrames = max(0, stableFrames - 2)
+            stableFrames = max(0, stableFrames - 1)
         }
 
         bitmap.recycle()
 
         runOnUiThread {
-            updateLiveUi(geometry, card, centerOk, poseOk, distanceOk, distanceHint)
-            if (stableFrames >= 12 && autoCaptureArmed) {
+            updateLiveUi(
+                geometry,
+                card,
+                centerOk,
+                poseOk,
+                distanceOk,
+                distanceHint
+            )
+
+            if (stableFrames >= 8 && autoCaptureArmed) {
                 autoCaptureArmed = false
                 captureLatestStableFrame()
             }
@@ -374,27 +475,91 @@ class MainActivity : AppCompatActivity() {
         distanceOk: Boolean,
         distanceHint: String
     ) {
+        liveOverlay.phase = capturePhase
         liveOverlay.cardValid = card.valid
         liveOverlay.faceValid = centerOk
         liveOverlay.poseValid = poseOk
         liveOverlay.distanceValid = distanceOk
         liveOverlay.invalidate()
 
-        setStatus(cardStatus, "Cartão", if (card.valid) "Válido" else "Ajuste", card.valid)
-        setStatus(faceStatus, "Rosto", if (centerOk) "Centralizado" else "Ajuste", centerOk)
-        setStatus(poseStatus, "Cabeça", if (poseOk) "Reta" else "Ajuste", poseOk)
-        setStatus(distanceStatus, "Distância", if (distanceOk) "Boa" else "Ajuste", distanceOk)
+        if (capturePhase == CapturePhase.FACE) {
+            setStatus(cardStatus, "Cartão", "Depois", false)
+        } else {
+            setStatus(
+                cardStatus,
+                "Cartão",
+                if (card.valid) "Detectado" else "Mostre ao lado",
+                card.valid
+            )
+        }
 
-        stabilityText.text = "Estabilidade: ${(stableFrames / 12f * 100).toInt().coerceIn(0, 100)}%"
-        captureButton.isEnabled = stableFrames >= 8 && latestValidFrame != null
+        setStatus(
+            faceStatus,
+            "Rosto",
+            if (centerOk) "Centralizado" else "Ajuste",
+            centerOk
+        )
+        setStatus(
+            poseStatus,
+            "Cabeça",
+            if (poseOk) "Boa" else "Ajuste",
+            poseOk
+        )
+        setStatus(
+            distanceStatus,
+            "Distância",
+            if (distanceOk) "Boa" else "Ajuste",
+            distanceOk
+        )
+
+        val progress = if (capturePhase == CapturePhase.FACE) {
+            (faceStableFrames / 5f * 100).toInt()
+        } else {
+            (stableFrames / 8f * 100).toInt()
+        }.coerceIn(0, 100)
+
+        stabilityText.text =
+            if (capturePhase == CapturePhase.FACE) {
+                "Validação do rosto: $progress%"
+            } else {
+                "Validação final: $progress%"
+            }
+
+        captureButton.isEnabled =
+            capturePhase == CapturePhase.CARD &&
+                stableFrames >= 5 &&
+                latestValidFrame != null
 
         instructionText.text = when {
-            !card.valid -> "1. Posicione o cartão horizontal no guia acima dos olhos."
-            face == null || !centerOk -> "2. Cartão válido. Agora centralize o rosto no oval."
-            !distanceOk -> "3. $distanceHint."
-            !poseOk -> "4. Olhe reto e mantenha a cabeça nivelada."
-            stableFrames < 8 -> "Perfeito. Fique imóvel por um instante."
-            else -> "Tudo validado. Capturando…"
+            capturePhase == CapturePhase.FACE && face == null ->
+                "Centralize o rosto no oval."
+
+            capturePhase == CapturePhase.FACE && !centerOk ->
+                "Centralize o rosto. Não precisa mostrar o cartão ainda."
+
+            capturePhase == CapturePhase.FACE && !distanceOk ->
+                distanceHint
+
+            capturePhase == CapturePhase.FACE && !poseOk ->
+                "Olhe para frente e mantenha a cabeça naturalmente reta."
+
+            capturePhase == CapturePhase.FACE ->
+                "Rosto correto ✓ Fique assim por um instante."
+
+            !centerOk || !distanceOk || !poseOk ->
+                "Mantenha o rosto como estava. Se necessário, retire o cartão e reposicione."
+
+            !card.valid ->
+                "Rosto OK ✓ Agora encoste o cartão ao lado da têmpora/bochecha. Pode ser horizontal ou vertical."
+
+            stableFrames < 5 ->
+                "Cartão detectado ✓ Mantenha rosto e cartão imóveis."
+
+            stableFrames < 8 ->
+                "Perfeito. Captura automática em instantes…"
+
+            else ->
+                "Tudo validado ✓"
         }
     }
 
@@ -564,6 +729,9 @@ class MainActivity : AppCompatActivity() {
         cameraScreen.visibility = View.VISIBLE
 
         stableFrames = 0
+        faceStableFrames = 0
+        lostFaceFrames = 0
+        capturePhase = CapturePhase.FACE
         autoCaptureArmed = true
         latestValidFrame?.bitmap?.let { if (!it.isRecycled) it.recycle() }
         latestValidFrame = null
@@ -574,9 +742,10 @@ class MainActivity : AppCompatActivity() {
             "Altura multifocal • captura ${heightCaptures.size + 1} de 2"
         }
 
-        instructionText.text = "Primeiro posicione o cartão no guia."
+        instructionText.text = "Centralize o rosto primeiro. O cartão será pedido depois."
         captureButton.isEnabled = false
         stabilityText.text = "Estabilidade: 0%"
+        liveOverlay.phase = CapturePhase.FACE
         liveOverlay.cardValid = false
         liveOverlay.faceValid = false
         liveOverlay.poseValid = false
@@ -719,7 +888,7 @@ class MainActivity : AppCompatActivity() {
         summaryScreen.visibility = View.GONE
 
         stepText.text = "DNP • captura 1 de 3"
-        instructionText.text = "Primeiro posicione o cartão no guia."
+        instructionText.text = "Centralize o rosto primeiro. O cartão será pedido depois."
     }
 
     private fun median(values: List<Double>): Double {
