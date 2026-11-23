@@ -1,0 +1,18 @@
+GITHUB ACTIONS — GERAR APK
+
+Este projeto já contém:
+.github/workflows/build-apk.yml
+
+Quando o projeto estiver em um repositório GitHub:
+1. Faça push para a branch main.
+2. Abra a aba Actions.
+3. Execute "Build Android APK" (ou aguarde o build automático após o push).
+4. Ao finalizar, abra o workflow.
+5. Em Artifacts, baixe "Optiker-Medidas-APK".
+6. Dentro estará Optiker-Medidas-debug.apk.
+
+Configuração validada para:
+- Java 17
+- Gradle 8.13
+- Android Gradle Plugin 8.13.2
+- Android SDK 36

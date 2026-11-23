@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="optiker_purple">#64289E</color>
+    <color name="optiker_deep">#1A0B2E</color>
+    <color name="optiker_lavender">#CDB7E9</color>
+    <color name="optiker_green">#39FF14</color>
+    <color name="optiker_bg">#F7F3FA</color>
+    <color name="white">#FFFFFF</color>
+    <color name="text_muted">#74697C</color>
+    <color name="ok">#2E7D32</color>
+    <color name="warn">#A36A00</color>
+    <color name="bad">#B3261E</color>
+</resources>

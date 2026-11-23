@@ -1,0 +1,12 @@
+COMO GERAR O APK — ÓPTIKER MEDIDAS
+
+1. Instale/abra o Android Studio.
+2. File > Open > selecione a pasta OptikerMedidasAndroid.
+3. Aguarde o Gradle Sync e aceite os downloads do Android SDK solicitados.
+4. Conecte seu POCO/Android via USB e permita depuração USB para testar ao vivo.
+5. Para instalar pelo Android Studio, clique em Run.
+6. Para gerar um arquivo APK:
+   Build > Build App Bundle(s) / APK(s) > Build APK(s).
+7. O Android Studio mostrará o caminho do APK gerado.
+
+O aplicativo usa a câmera nativa do Android. Não usa Chrome nem WebView.

@@ -1,0 +1,12 @@
+ÓPTIKER MEDIDAS — VALIDAÇÃO ANTES DE PRODUÇÃO
+
+Antes de liberar o app para clientes:
+1. Testar em pelo menos vários aparelhos Android diferentes.
+2. Comparar DNP do app com pupilômetro/centrador em uma amostra real.
+3. Registrar erro absoluto OD, OE e DP.
+4. Validar altura com armação física e método de referência.
+5. Definir tolerância máxima aceitável.
+6. Não usar automaticamente para produção quando a repetibilidade falhar.
+7. Verificar iluminação, distância e posição do cartão no protocolo.
+
+O app não deve substituir conferência profissional antes da validação interna.

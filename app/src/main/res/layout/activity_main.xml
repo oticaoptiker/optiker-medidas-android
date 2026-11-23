@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/optiker_bg">
+
+    <!-- CAMERA SCREEN -->
+    <LinearLayout
+        android:id="@+id/cameraScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="18dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="10dp"
+            android:background="@color/white">
+
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Óptiker Medidas"
+                android:textColor="@color/optiker_purple"
+                android:textSize="23sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/stepText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="DNP • captura 1 de 3"
+                android:textColor="@color/text_muted"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/cameraFrame"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#09070C">
+
+            <androidx.camera.view.PreviewView
+                android:id="@+id/previewView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <com.optiker.medidas.MeasurementOverlayView
+                android:id="@+id/liveOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="@color/white">
+
+            <TextView
+                android:id="@+id/instructionText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Primeiro posicione o cartão no guia."
+                android:textColor="@color/optiker_deep"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:paddingBottom="9dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/cardStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="7dp"
+                    android:text="Cartão\n—"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/faceStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="7dp"
+                    android:text="Rosto\n—"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/poseStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="7dp"
+                    android:text="Cabeça\n—"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/distanceStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:padding="7dp"
+                    android:text="Distância\n—"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/stabilityText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Estabilidade: 0%"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp" />
+
+            <Button
+                android:id="@+id/captureButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Capturar agora"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:enabled="false"
+                android:backgroundTint="@color/optiker_purple"
+                android:textColor="@color/white" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- REVIEW SCREEN -->
+    <LinearLayout
+        android:id="@+id/reviewScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:background="@color/optiker_bg">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@color/white">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Revisar medição"
+                android:textColor="@color/optiker_purple"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/reviewHelp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Se algum ponto estiver fora do centro, selecione-o e toque na posição correta."
+                android:textColor="@color/text_muted"
+                android:textSize="12sp"
+                android:paddingTop="4dp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#09070C">
+
+            <ImageView
+                android:id="@+id/reviewImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter" />
+
+            <com.optiker.medidas.ReviewOverlayView
+                android:id="@+id/reviewOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp"
+            android:background="@color/white">
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/adjustButtons"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="6dp">
+
+                <Button
+                    android:id="@+id/nudgeLeft"
+                    android:layout_width="52dp"
+                    android:layout_height="44dp"
+                    android:text="←"
+                    android:textSize="20sp"
+                    android:backgroundTint="@color/optiker_lavender" />
+
+                <Button
+                    android:id="@+id/nudgeUp"
+                    android:layout_width="52dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="5dp"
+                    android:text="↑"
+                    android:textSize="20sp"
+                    android:backgroundTint="@color/optiker_lavender" />
+
+                <Button
+                    android:id="@+id/nudgeDown"
+                    android:layout_width="52dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="5dp"
+                    android:text="↓"
+                    android:textSize="20sp"
+                    android:backgroundTint="@color/optiker_lavender" />
+
+                <Button
+                    android:id="@+id/nudgeRight"
+                    android:layout_width="52dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="5dp"
+                    android:text="→"
+                    android:textSize="20sp"
+                    android:backgroundTint="@color/optiker_lavender" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/reviewResult"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/panel_bg"
+                android:padding="10dp"
+                android:text="Resultado"
+                android:textColor="@color/optiker_deep"
+                android:textSize="14sp"
+                android:layout_marginTop="7dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <Button
+                    android:id="@+id/retakeButton"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:text="Refazer foto"
+                    android:textAllCaps="false"
+                    android:backgroundTint="@color/optiker_lavender"
+                    android:textColor="@color/optiker_deep" />
+
+                <Button
+                    android:id="@+id/confirmButton"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="Confirmar"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    android:backgroundTint="@color/optiker_purple"
+                    android:textColor="@color/white" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- SUMMARY SCREEN -->
+    <ScrollView
+        android:id="@+id/summaryScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:fillViewport="true"
+        android:background="@color/optiker_bg">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Óptiker Medidas"
+                android:textColor="@color/optiker_purple"
+                android:textSize="25sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/summaryTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DNP validada"
+                android:textColor="@color/optiker_deep"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:paddingTop="14dp" />
+
+            <TextView
+                android:id="@+id/summaryValues"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/panel_bg"
+                android:padding="16dp"
+                android:textColor="@color/optiker_deep"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginTop="10dp" />
+
+            <TextView
+                android:id="@+id/repeatabilityText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:textColor="@color/text_muted"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/dnpOnlyButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Finalizar somente DNP"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/optiker_deep"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/multifocalButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="8dp"
+                android:text="Medir altura multifocal"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:backgroundTint="@color/optiker_purple"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/retrySeriesButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="8dp"
+                android:text="Refazer série"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/optiker_lavender"
+                android:textColor="@color/optiker_deep"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/multifocalNotice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/panel_bg"
+                android:padding="12dp"
+                android:layout_marginTop="14dp"
+                android:text="Para altura multifocal, use exatamente a armação que será produzida, já ajustada no rosto."
+                android:textColor="@color/optiker_deep"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/startHeightButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="8dp"
+                android:text="Estou com a armação exata — iniciar"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:backgroundTint="@color/optiker_purple"
+                android:textColor="@color/white"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/shareButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="18dp"
+                android:text="Compartilhar resultado"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/optiker_purple"
+                android:textColor="@color/white"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/newMeasurementButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="8dp"
+                android:text="Nova medição"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/optiker_lavender"
+                android:textColor="@color/optiker_deep"
+                android:visibility="gone" />
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>
