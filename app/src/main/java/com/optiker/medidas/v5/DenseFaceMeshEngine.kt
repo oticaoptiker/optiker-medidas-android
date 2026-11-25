@@ -13,7 +13,7 @@ import kotlin.math.roundToInt
 class DenseFaceMeshEngine {
 
     private val detector: FaceMeshDetector =
-        FaceMeshDetection.getClient(FaceMeshDetectorOptions.DEFAULT_OPTIONS)
+        FaceMeshDetection.getClient()
 
     fun process(image: InputImage): Task<List<FaceMesh>> = detector.process(image)
 
