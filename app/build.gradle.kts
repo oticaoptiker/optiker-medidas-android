@@ -1,23 +1,4 @@
-optiker-medidas-android
-└── app
-    ├── build.gradle.kts
-    └── src
-        └── main
-            ├── AndroidManifest.xml
-            ├── java
-            │   └── com
-            │       └── optiker
-            │           └── medidas
-            │               ├── arquivos antigos da V4
-            │               └── v5
-            │                   ├── CameraProfiler.kt
-            │                   ├── DenseFaceMeshEngine.kt
-            │                   ├── V5FaceOverlayView.kt
-            │                   ├── V5MeasurementActivity.kt
-            │                   └── V5Models.kt
-            └── res
-                └── layout
-                    └── activity_v5_measurement.xmlplugins {
+plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
@@ -30,8 +11,8 @@ android {
         applicationId = "com.optiker.medidas"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.5.0-v5-alpha"
     }
 
     buildTypes {
@@ -49,11 +30,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-kotlin {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
-}
 }
 
 dependencies {
@@ -67,6 +48,7 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$camerax")
     implementation("androidx.camera:camera-view:$camerax")
 
-    // Modelo facial empacotado no APK: não precisa baixar no primeiro uso.
     implementation("com.google.mlkit:face-detection:16.1.7")
+    implementation("com.google.mlkit:face-mesh-detection:16.0.0-beta1")
+    implementation("com.google.ar:core:1.57.0")
 }
