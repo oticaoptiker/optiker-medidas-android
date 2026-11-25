@@ -1,4 +1,23 @@
-plugins {
+optiker-medidas-android
+└── app
+    ├── build.gradle.kts
+    └── src
+        └── main
+            ├── AndroidManifest.xml
+            ├── java
+            │   └── com
+            │       └── optiker
+            │           └── medidas
+            │               ├── arquivos antigos da V4
+            │               └── v5
+            │                   ├── CameraProfiler.kt
+            │                   ├── DenseFaceMeshEngine.kt
+            │                   ├── V5FaceOverlayView.kt
+            │                   ├── V5MeasurementActivity.kt
+            │                   └── V5Models.kt
+            └── res
+                └── layout
+                    └── activity_v5_measurement.xmlplugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
