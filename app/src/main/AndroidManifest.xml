@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
     <uses-permission android:name="android.permission.CAMERA" />
+
     <uses-feature
         android:name="android.hardware.camera.front"
         android:required="true" />
@@ -10,8 +12,18 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.OptikerMedidas"
         android:supportsRtl="true">
+
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="optional" />
+
         <activity
             android:name=".MainActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".v5.V5MeasurementActivity"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -19,5 +31,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 </manifest>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/optiker_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:paddingStart="18dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="10dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Óptiker Medidas V5"
+            android:textColor="@color/optiker_purple"
+            android:textSize="23sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="IA facial • câmera calibrada • base sem cartão"
+            android:textColor="@color/text_muted"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#09070C">
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/v5PreviewView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.optiker.medidas.v5.V5FaceOverlayView
+            android:id="@+id/v5FaceOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:fillViewport="true"
+        android:background="@color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/v5StateText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/panel_bg"
+                android:padding="12dp"
+                android:text="Inicializando V5…"
+                android:textColor="@color/optiker_deep"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/v5MeshText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Malha IA: inicializando…"
+                android:textColor="@color/optiker_deep"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/v5ArcoreText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="ARCore: verificando…"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/v5CameraText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/panel_bg"
+                android:padding="10dp"
+                android:text="Câmera: identificando…"
+                android:textColor="@color/text_muted"
+                android:textSize="11sp" />
+
+            <Button
+                android:id="@+id/v5FallbackButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="10dp"
+                android:text="Abrir V4 (fallback)"
+                android:textAllCaps="false"
+                android:backgroundTint="@color/optiker_lavender"
+                android:textColor="@color/optiker_deep" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
