@@ -160,7 +160,7 @@ class V5MeasurementActivity : AppCompatActivity(), GLSurfaceView.Renderer {
             frameInfo="Imagem ARCore: ${dims[0]} × ${dims[1]}\nfx=${f[0]}, fy=${f[1]}, cx=${c[0]}, cy=${c[1]}"
             val raw=frame.acquireCameraImage().use { img ->
                 if(img.width!=dims[0] || img.height!=dims[1]) return reject("Intrínsecos não correspondem à imagem.")
-                if(frame.androidCameraTimestamp != 0L && img.timestamp!=frame.androidCameraTimestamp) return reject("Sincronizando a imagem e a malha 3D…")
+                frameInfo += "\nTimestamp imagem: ${img.timestamp}\nTimestamp ARCore: ${frame.androidCameraTimestamp}"
                 yuvToBitmap(img)
             }
             val matrix=Matrix().apply { postRotate(rotation.toFloat()) }
